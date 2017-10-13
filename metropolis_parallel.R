@@ -266,6 +266,163 @@ mu_samp <- mcmc.mu[numKeep,]
 
 
 
+# marginalize out w
+makePredictionAniso_v2 <- function(numSample, newSites){
+  
+  sigmasq <- sig_samp[numSample]
+  tausq <- tau_samp[numSample]
+  mu <- mu_samp[numSample,]
+  a <- a_samp[numSample]
+  r <- r_samp[numSample]
+  phi <- phi_samp[numSample]
+  amin <- 1
+  amax <- amin*r
+  rotationMat <- matrix(c(cos(a),-sin(a),sin(a),cos(a)),nrow=2,ncol=2)
+  aMat <- matrix(c(1/amax,0,0,1/amin),nrow=2,ncol=2)
+  A <- rotationMat %*% aMat
+  B <- A %*% t(A)
+  SigmaObs <- sigmasq * exp(-phi * sqrt(makeB(B)))
+  diag(SigmaObs) <- sigmasq + tausq
+
+  S <- solve(SigmaObs)
+  
+  predictions <- NULL
+  for(j in 1:nrow(newSites)){
+    newSite <- newSites[j,]
+    distPO <- matrix(0, nrow=numSites, ncol = 2)
+    for(i in 1:numSites){
+      distPO[i,] <- newSite - sites_train[i,]
+    }
+    SigmaPO <- matrix(0, nrow=1, ncol=numSites)
+    for(i in 1:numSites){
+      SigmaPO[,i] <- sigmasq * exp(-phi * sqrt(distPO[i,] %*% B %*% distPO[i,]))
+    }
+    mean_yPred <- mu + SigmaPO %*% S %*% (y_train - rep(mu, numSites))
+    var_yPred <- sigmasq + tausq - SigmaPO %*% S %*% t(SigmaPO)
+    yPred <- rnorm(1, mean_yPred, sqrt(var_yPred))
+    predictions <- c(predictions, yPred)
+  }
+  
+  return(predictions)
+}
+
+
+# isotropy krigging 
+makePredictionIso <- function(numSample, newSites){
+  
+  sigmasq <- sub.samps.iso[numSample,"sigmasq"]
+  tausq <- sub.samps.iso[numSample,"tausq"]
+  mu <- sub.samps.iso[numSample, "mu"]
+  phi <- sub.samps.iso[numSample, "phi"]
+  
+  SigmaObs <- matrix(0,nrow=numSites, ncol=numSites)
+  for (i in 1:(numSites-1)) {
+    for (j in (i+1):numSites) {
+      SigmaObs[i,j] <- sigmasq * exp(-phi * distX[i,j])
+    }
+  }
+  
+  for (i in 1:(numSites-1)) {
+    for (j in (i+1):numSites) {
+      SigmaObs[j,i] <- sigmasq * exp(-phi * distX[i,j])
+    }
+  }
+  
+  for(k in 1:numSites){
+    SigmaObs[k,k] <- sigmasq + tausq
+  }
+  
+  S <- solve(SigmaObs)
+  
+  predictions <- NULL
+  for(j in 1:nrow(newSites)){
+    newSite <- newSites[j,]
+    distPO <- matrix(0, nrow=numSites, ncol = 1)
+    for(i in 1:numSites){
+      distPO[i,] <- dist(rbind(newSite,sites_train[i,]))
+    }
+    SigmaPO <- matrix(0, nrow=1, ncol=numSites)
+    for(i in 1:numSites){
+      SigmaPO[,i] <- sigmasq * exp(-phi * distPO[i,])
+    }
+    mean_yPred <- mu + SigmaPO %*% S %*% (y_train - rep(mu, numSites))
+    var_yPred <- sigmasq + tausq - SigmaPO %*% S %*% t(SigmaPO)
+    yPred <- rnorm(1, mean_yPred, sqrt(var_yPred))
+    predictions <- c(predictions, yPred)
+  }
+  
+  return(predictions)
+  
+}
+
+
+
+nMCMC <- nrow(sub.samps.ani)
+distX <- as.matrix(dist(sites_train))
+predsIso <- t(sapply(1:nMCMC, makePredictionIso, newSites=sites_test))
+predsAniso_v1 <- t(sapply(1:nMCMC, makePredictionAniso_v1, newSites=sites_test))
+predsAniso_v2 <- t(sapply(1:nMCMC, makePredictionAniso_v2, newSites=sites_test))
+
+
+save(predsIso, file="predsIso_ar_100.Rdata")
+save(predsAniso_v1, file="predsAniso_ar_100_v1.Rdata")
+save(predsAniso_v2, file="predsAniso_ar_100_v2.Rdata")
+
+
+# Isotropy
+
+# 1. empirical coverage
+yObs <- y_test
+numPred <- length(y_test)
+qt <- apply(predsIso, 2, function(x) quantile(x, probs = c(0.05, 0.95)))
+ave <- apply(predsIso, 2, mean)
+empCov <- data.frame(cbind(ave, t(qt), yObs))
+colnames(empCov) <- c("Mean", "Lower", "Higher", "True")
+empCov$capture <- empCov$Lower <= empCov$True & empCov$Higher >= empCov$True 
+pdf("empCovIso.pdf")
+ggplot(empCov, aes(y=True, x=1:numPred, color=capture)) +
+  xlab("index") +
+  geom_errorbar(aes(ymax=Higher, ymin=Lower), width=0, color='black', alpha=0.3, size=2) +
+  geom_point(size=5) +
+  labs(x = "Index of New Sites", y="Predcited/Observed Value") +
+  ggtitle(paste("Empirical Coverage of Isotropic Model =",sum(empCov$capture)/numPred))
+dev.off()
+ecIso <- sum(empCov$capture)/numPred
+
+
+# 2. PMSE
+mseIso <- mean((empCov$Mean-empCov$True)^2)
+
+# 3. CRPS
+crpsIso <- crps_test(empCov$Mean, empCov$True)
+
+# Anisotropy
+
+# 1. empirical coverage
+qt <- apply(predsAniso_v2, 2, function(x) quantile(x, probs = c(0.05, 0.95)))
+ave <- apply(predsAniso_v2, 2, mean)
+empCov <- data.frame(cbind(ave, t(qt), yObs))
+colnames(empCov) <- c("Mean", "Lower", "Higher", "True")
+empCov$capture <- empCov$Lower <= empCov$True & empCov$Higher >= empCov$True 
+pdf("empCovAniso.pdf")
+ggplot(empCov, aes(y=True, x=1:length(y_test), color=capture)) +
+  xlab("index") +
+  geom_errorbar(aes(ymax=Higher, ymin=Lower), width=0, color='black', alpha=0.3, size=2) +
+  geom_point(size=5) +
+  labs(x = "Index of New Sites", y="Predcited/Observed Value") +
+  ggtitle(paste("Empirical Coverage of Anisotropic Model =",sum(empCov$capture)/numPred))
+dev.off()
+ecAni <- sum(empCov$capture)/numPred
+
+
+# 2. PMSE
+mseAni <- mean((empCov$Mean-empCov$True)^2)
+
+# 3. CRPS
+
+crpsAni <- crps_test(empCov$Mean, empCov$True)
+
+save(ecIso, mseIso, crpsIso, ecAni, mseAni, crpsAni, file="resPrediction_ar_1.Rdata")
 
 
 
