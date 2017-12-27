@@ -1,0 +1,104 @@
+---
+author: 'Angie Shen'
+date: 'December 2017'
+institution: 'Duke University'
+division: 'Trinity College of Arts and Sciences'
+advisor: 'Dr. Alan Gelfand'
+#altadvisor: 'Your Other Advisor'
+# Delete line 7 if you only have one advisor
+committeememberone: 'Dr. Colin Rundel'
+committeemembertwo: 'Dr. Katherine Heller'
+dus: 'Dr. Mine Çetinkaya-Rundel'
+department: 'Department of Statistical Science'
+degree: 'Bachelor of Science in Statistical Science'
+title: 'Exploring Geometric Anisotropy for Point-Referenced Spatial Data'
+knit: "bookdown::render_book"
+site: bookdown::bookdown_site
+output: 
+  thesisdowndss::thesis_pdf: default
+  thesisdowndss::thesis_gitbook: default
+#  thesisdowndss::thesis_word: default
+#  thesisdowndss::thesis_epub: default
+# If you are creating a PDF you'll need to write your preliminary content here or
+# use code similar to line 20 for the files.  If you are producing in a different
+# format than PDF, you can delete or ignore lines 20-31 in this YAML header.
+abstract: |
+  `r if(knitr:::is_latex_output()) paste(readLines("00-abstract.Rmd"), collapse = '\n  ')`
+# If you'd rather include the preliminary content in files instead of inline
+# like below, use a command like that for the abstract above.  Note that a tab is 
+# needed on the line after the |.
+
+bibliography: bib/thesis.bib
+# Refer to your specific bibliography file in the line above.
+csl: csl/apa.csl
+# Download your specific csl file and refer to it in the line above.
+lot: true
+lof: true
+#space_between_paragraphs: true
+# Delete the # at the beginning of the previous line if you'd like
+# to have a blank new line between each paragraph
+header-includes:
+- \usepackage{tikz}
+- \usepackage{amsmath}
+- \usepackage{amsfonts}
+- \usepackage{graphicx}
+- \usepackage{caption}
+- \usepackage{subcaption}
+- \usepackage{float}
+- \usepackage{palatino}
+- \usepackage{times}
+- \usepackage{color}
+- \usepackage[utf8]{inputenc}
+- \usepackage[english]{babel}
+- \usepackage[round]{natbib}
+- \usepackage{pbox}
+- \usepackage{tabularx}
+- \bibliographystyle{chicago}
+---
+
+<!--
+Above is the YAML (YAML Ain't Markup Language) header that includes a lot of metadata used to produce the document.  Be careful with spacing in this header!
+
+If you'd prefer to not include a Dedication, for example, simply delete lines 17 and 18 above or add a # before them to comment them out.  If you have other LaTeX packages you would like to include, delete the # before header-includes and list the packages after hyphens on new lines.
+
+If you'd like to include a comment that won't be produced in your resulting file enclose it in a block like this.
+-->
+
+<!--
+If you receive a duplicate label error after knitting, make sure to delete the index.Rmd file and then knit again.
+-->
+
+```{r include_packages, include = FALSE}
+# This chunk ensures that the thesisdowndss package is
+# installed and loaded. This thesisdowndss package includes
+# the template files for the thesis.
+if(!require(devtools))
+  install.packages("devtools", repos = "http://cran.rstudio.com")
+if(!require(thesisdowndss))
+  devtools::install_github("mine-cetinkaya-rundel/thesisdowndss")
+library(thesisdowndss)
+```
+
+<!-- You'll need to include the order that you'd like Rmd files to appear in the _bookdown.yml file for
+PDF files and also delete the # before rmd_files: there.  You'll want to not include 00(two-hyphens)prelim.Rmd
+and 00-abstract.Rmd since they are handled in the YAML above differently for the PDF version.
+-->
+
+<!-- The {.unnumbered} option here means that the introduction will be "Chapter 0." You can also use {-} for no numbers
+on chapters.
+-->
+
+# Introduction {.unnumbered}
+
+Researchers in diverse areas such as climatology, ecology and environmental health are increasingly interested in analyzing data that are geographically referenced. For example, epidemiologists may be interested in studying the number of lung cancer incidents by county and state. Ecologists may be interested in the location of a particular species of trees in a forest. Researchers are often interested in statistical inference tasks, such as modeling of trends and correlation structures, estimation of underlying model parameters, hypothesis testing, model comparison and selection, and prediction of observations at unobserved locations (kriging). 
+
+With the advancement of Markov chain Monte Carlo (MCMC) computing, Bayesian modeling approaches have become increasingly common, as they enable hierarchical model structures where prior belief is updated with new information, as well as natural quantification of uncertainty through sampling schemes. The [@BCG] text presents a thorough treatment of hierarchical Bayesian approaches for a variety of complex spatial data problems.
+
+One common type of spatial data is $\textit{point-referenced}$ data, often referred to as $\textit{geostatistical}$ data, where we observe realizations of a spatial stochastic process at a fixed set of locations. We are often interested in a geographical distribution for the realizations that accounts for spatial correlation, typically in the presence of spatially referenced covariates. The simplest choices for modeling spatial correlation are $\textit{isotropic}$ covariance functions, where we assume spatial correlation between locations depends only on the distance between locations. In cases where this assumption does not hold, i.e., spatial correlation varies by direction, we can consider $\textit{anisotropic}$ covariance functions which depend on the separation vector between locations.
+
+In the literature we find several notions of anisotropy, e.g., sill, nugget, and geometric anisotropy [@Z1993]. From a generative modeling perspective, the most useful form of anisotropy is $\textit{Geometric Anisotropy}$, where coordinates are linearly transformed, i.e., rotated and stretched, to allow for different magnitudes of correlation in different directions. [@BD2005] explored different forms of geometric anisotropic variograms. [@Eriksson2000] provided the geometrical details for modeling various types of anisotropy (range, sill, power, slope, nugget) on an ellipse. [@ASP2016] derived a directional representation of anisotropies to build a large class of models that include and go beyond classical anisotropies such as the geometric and zonal ones. [@PGM2006] incorporated anisotropy into spatio-temporal covariance models. [@Gelfand1999] proposed a Bayesian methodology for simultaneously estimating the linear transformation of the coordinates and other variogram parameters, which also allows full inference for any characteristic of the geometrically anisotropic model. Following [@Gelfand1999] who proposed to use objective, independent priors for model parameters, [@Hannes2013] developed default priors and studied their posterior propriety.
+
+This paper attempts to illuminate when and how much geometric anisotropic (henceforth anisotropic) models for random effects in geostatistical settings improve predictive performance. We use a transformation matrix parametrized by a decay parameter, a rotation angle and an anisotropy ratio. In the form of a simulation study, we compare the predictive performance of isotropic and anisotropic models for data generated under anisotropy. We also test the sensitivity of the models to different parameter values of the data generating model, including different sample sizes, different choices of anisotropy ratio, and different scales and ratios of spatial variance and pure error. We find that geometric anisotropy yields better predictive performance when the data significantly departs from isotropy (anisotropy ratio is much greater than one), and the improvement is more prominent when spatial variance is greater than pure error. We use Metropolis Hastings algorithm to perform full Bayesian inference for all model parameters. We then fit isotropic and anisotropic models to data on scallop catches used in [@Gelfand1999] which have been shown to suggest anisotropic behavior. We show that the anisotropic model performs better in terms of empirical coverage, predictive mean squared error and continuous rank probability score.
+
+The paper proceeds as follows. Section 2 formally defines the isotropic and geometric anisotropic models we use for point-referenced data. Section 3 details our model fitting algorithm and distribution theory for making predictions. Section 4 lays out the metrics we use for model comparison. Section 5 demonstrates the simulation exercise with associated results. Section 6 presents modeling results for scallop catches data. Finally, Section 7 discusses future work.
+

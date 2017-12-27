@@ -1,0 +1,14 @@
+
+# Discussion and Future Work
+
+This paper explored when and how much geometric anisotropic models for random effects in geostatistical settings improve predictive performance over isotropic models. We compared the predictive performance of isotropic and anisotropic models for data generated under anisotropy, using different values of the parameters in the data generating model, including different sample sizes, different choices of anisotropy ratio, and different scales and ratios of spatial variance and pure error. We found that anisotropy yields better predictive performance when the data significantly departs from isotropy (anisotropy ratio is much greater than one), and that the improvement is more prominent when the anisotropy ratio is higher and when spatial variance is higher compared to pure error, regardless of sample size. The anisotropic model yields much better predictive results on the real scallop catches data, which have been suggested to exhibit anisotropic behavior. We performed full Bayesian inference on all model parameters using a Metropolis-Hastings algorithm for model fitting.
+
+Future work involves extending the geometric anisotropic model assessment to multivariate observations at locations and to space-time settings. We will also explore different ways of constructing stationarity by using different covariance structures. In particular we are interested in exploring product covariance function, i.e. the product of one-dimensional covariance function in the x-coordinate and a one-dimensional covariance function in the y-coordinate, which takes the following form:
+
+\begin{equation*}
+C(d) = \begin{cases}
+\tau^2 + \sigma^2 & \text{if $d=0$}\\
+\sigma^2\text{exp}(-\phi_{x} d_{x})\text{exp}(-\phi_{y}d_{y}) & \text{if $d>0$}
+\end{cases}
+\end{equation*}
+where $d_{x}$ is the distance between x-coordinates and $d_{y}$ is the distance between y-coordinates.

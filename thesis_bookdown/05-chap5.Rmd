@@ -1,0 +1,91 @@
+# A real Data Example: Scallop Catches
+We apply the models to data on sampling of scallop abundance on the continental shelf off the coastline of the northeastern U.S. The data comes from a survey conducted by the Northeast Fisheries Science Center of the National Marine Fisheries Service. Figure \@ref(fig:scallop) shows the sampling sites for 1993 and Figure \@ref(fig:surf) shows the spatial surface as well as contours of the data at the sites used for model fitting. There are a total of 148 sampling sites. We use 118 for model fitting and 30 as hold out data for kriging. We see a lot more sampling in southwest to northeast direction than in the northwest to southeast direction. Evidently it is more appropriate to follow the coastline in searching for scallops.
+
+
+```{r scallop, fig.cap="Sites sampled in the Atlantic Ocean for 1993 scallop catch data (fitted and hold out)",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/scallop_sites.pdf")
+```
+
+```{r surf, fig.cap="Surface and contour plot for 1993 scallop data (fitted)",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/surface.pdf")
+```
+
+
+
+
+Again, we fit the anisotropic model using methodology detailed in section 3, and the isotropic model using spBayes. In both cases, we run 30,000 iterations, using a burn-in of 20,000 and a thinning rate of 1/20 for the remaining 10,000 samples.  Therefore, we retain 500 posterior samples of all model parameters. Figure \@ref(fig:density) shows the density plot of the remaining posterior samples under anisotropy. Table \@ref(tab:param) shows the posterior means and 95% credible intervals for all model parameters under isotropy and anisotropy.  
+
+```{r density, fig.cap="Density plots of posterior samples for all parameters under anisotropy (after burn-in and thinning)",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/density.pdf")
+```
+
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{15pt}
+\hspace*{-1.2cm}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Parameters & $\mu$ & $\phi$ & $\sigma^2$ & $\tau^2$ & $\alpha$ & $r$ \\[10pt]
+\hline
+Isotropy & NA & \pbox{20cm}{4.92\\(2.49, 8.71)} & \pbox{20cm}{5.20\\(3.10, 8.94)} & \pbox{20cm}{0.49\\(0.19, 1.15)} & NA & NA \\
+\hline
+Anisotropy & \pbox{20cm}{2.40 \\(0.57, 3.96)} & \pbox{20cm}{6.3 \\(2.23, 13.24)} & \pbox{20cm}{4.36 \\(1.77, 10.81)} & \pbox{20cm}{1.23 \\(0.30, 2.07)} & \pbox{20cm}{2.35\\(1.31, 2.74)} & \pbox{20cm}{11.2 \\(0.49, 26.27)}\\
+\hline
+\end{tabular}
+\caption{Posterior means and 95\% credible intervals for all model parameters under isotropy and anisotropy}
+\label{tab:param}
+\end{table}
+
+To show evidence for departure from isotropy, we obtain the posterior distribution for range in each direction. Figure \@ref(fig:ranges) shows the mean posterior range plotted as a function of angle with associated individual 95% credible intervals. The plot on the right shows the range in polar coordinates which forms an ellipse.
+
+
+```{r ranges, fig.cap="Mean posterior range plotted as a function of angle with associated individual 95 percent credible intervals. The plot on the right shows the range in polar coordinates which forms an ellipse.",echo=FALSE, out.extra="scale=0.6"}
+include_graphics(path = "figure/ranges.pdf")
+```
+
+
+We evaluate the predictive performance of the two models on the 30 hold-out sites using empirical coverage, PMSE and CRPS, as displayed in Table \@ref(tab:eval). The anisotropic model reduces average PMSE by 12% and reduces average CRPS by 7% over the 30 sites. Anisotropy also has higher empirical coverage than isotropy.
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Model & EC & PMSE & CRPS\\[10pt]
+\hline
+Isotropy & 86.7\% & 1.792 & 0.781\\
+\hline
+Anisotropy & 96.7\% & 1.581 & 0.725 \\
+\hline
+\end{tabular}
+\caption{Model comparison of isotropy and anisotropy for scallops data: 90\% empirical coverage, PMSE, and CRPS}
+\label{tab:eval}
+\end{table}
+
+Figure \@ref(fig:EC) shows the empirical coverage of isotropy and anisotropy, where the dots represent the observed values and the grey lines represent the 90% credible interval of the posterior predictive samples. We can see the credible intervals produced by isotropy fail to capture the observed value for 4 of the 30 sites, while anisotropy fails to capture 1 site.
+
+
+```{r EC, fig.cap="Model comparison: empirical coverage of isotropy and anisotropy",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/empCovIso.pdf")
+```
+
+```{r EC2, fig.cap="Model comparison: empirical coverage of isotropy and anisotropy",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/empCovAniso.pdf")
+```
+
+
+Figure \@ref(fig:CRPS) shows the posterior predictive distribution and PMSE for 4 randomly selected hold out sites under isotropy and anisotropy. The vertical line represents the observed value. Under anisotropy, the predictive distributions are more closely concentrated around the observed value, and the PMSE's are smaller.
+
+
+```{r CRPS, fig.cap="Model comparison: posterior predictive distribution and PMSE for 4 hold out sites under isotropy and anisotropy. Vertical line represents the observed value.", echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/crps_Iso.pdf")
+```
+
+```{r CRPS1, fig.cap="Model comparison: posterior predictive distribution and PMSE for 4 hold out sites under isotropy and anisotropy. Vertical line represents the observed value.",echo=FALSE,out.extra="scale=0.7"}
+include_graphics(path = "figure/crps_Aniso.pdf")
+```
+
+
+

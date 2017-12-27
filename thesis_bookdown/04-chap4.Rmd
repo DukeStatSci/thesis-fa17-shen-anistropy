@@ -1,0 +1,181 @@
+# Simulation Study
+
+We design a set of simulations to compare the predictive performance of isotropic and anisotropic models for data generated under anisotropy. We test the sensitivity of the models to different parameter values of the data generating model, including different sample sizes, different choices of anisotropy ratio, and different scales of spatial variance and pure error. We don't vary the choice of rotation angle, as the angle does not impact the degree of departure from isotropy. 
+
+We randomly generate locations on a unit square. We generate observations following a multivariate normal distribution with constant global mean $0$ and exponential covariance function as specified in (4) and (5). Spatial range is 0.5, around half of the maximum distance between the locations. The decay parameter $\phi$ is $3/0.5 =  6$. We fit the model and predict for a hold out sample using the methodology outlined in section 3. We fit the isotropic model using the R package spBayes [@spb1]. We compare the predictive performance of the isotropic model and the anisotropic model using empirical coverage, PMSE and CRPS as defined in Section 4.
+
+We choose three different anisotropy ratios, 1.5, 4 and 8, as well as four different combinations of spatial variance $\sigma^2$ and pure error $\tau^2$. We anticipate that, when the anisotropy ratio is big, spatial variance of simulated data is high, and spatial variance is significantly larger compared to pure error, the predictive performance of the anisotropic model will significantly improve over the isotropic model. We use two different sample sizes 100 (with 40 additional observations for hold out) and 500 (with 100 additional observations for hold out). We further anticipate that the two models will be more distinguishable with the bigger sample size.
+
+Table 2-7 display the comparisons of empirical coverage, PMSE, and CRPS of anisotropy and isotropy under the different data generation scenarios. All results are averaged over 10 randomly generated datasets. When sample size is 100, anisotropy yields smaller MSE than isotropy under all but one scenario when anisotropy ratio is 1.5. As we expect, the improvement is more prominent when anisotropy ratio is 8 (10\%) than when it is 4 (1\%), when spatial variance is greater than non-spatial variance (11\%) than when they are equal (3\%) and when both variances are small (7\%) than when they are big (6\%). The CRPS confirms these results. The empirical coverage of the anisotropic model is closer to the nominal 90\% under all scenarios. These conclusions are confirmed when sample size is 500. Sample size does not seem to make a difference in distinguishing the models. 
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.9275, 0.93) \\[5pt]
+\hline
+$r = 4$ & (0.92, 0.9275) \\[5pt]
+\hline
+$r = 8$ & (0.9125, 0.925) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[5pt]
+\hline
+$\sigma^2 = 0.2$ & (0.9175, 0.9175) & (0.9575, 0.96)\\[5pt]
+\hline
+$\sigma^2 = 1$ & (0.89, 0.8775) & (0.9125, 0.925)\\[5pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, $90\%$ Empirical Coverage (Anisotropy, Isotropy), sample size = 100}
+\end{table}
+
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.925, 0.9) \\[5pt]
+\hline
+$r = 4$ & (0.916, 0.906) \\[5pt]
+\hline
+$r = 8$ & (0.9, 0.902) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[8pt]
+\hline
+$\sigma^2 = 0.2$ & (0.905, 0.904) & (0.928, 0.912)\\[8pt]
+\hline
+$\sigma^2 = 1$ & (0.896, 0.898) & (0.9, 0.902)\\[8pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, $90\%$ empirical coverage (anisotropy, isotropy), sample size = 500}
+\end{table}
+
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.588, 0.528) \\[5pt]
+\hline
+$r = 4$ & (0.497, 0.504) \\[5pt]
+\hline
+$r = 8$ & (0.411, 0.457) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[8pt]
+\hline
+$\sigma^2 = 0.2$ & (0.265, 0.275) & (0.082, 0.093)\\[8pt]
+\hline
+$\sigma^2 = 1$ & (1.377, 1.407) & (0.411, 0.457)\\[8pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, predictive mean squared error (anisotropy, isotropy), sample size = 100}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.487, 0.399) \\[5pt]
+\hline
+$r = 4$ & (0.334, 0.338) \\[5pt]
+\hline
+$r = 8$ & (0.318, 0.345) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[8pt]
+\hline
+$\sigma^2 = 0.2$ & (0.226, 0.239) & (0.061, 0.068)\\[8pt]
+\hline
+$\sigma^2 = 1$ & (1.141, 1.197) & (0.318, 0.345) \\[8pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, predictive mean squared error (anisotropy, isotropy), sample size = 500}
+\end{table}
+
+
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.431, 0.409) \\[5pt]
+\hline
+$r = 4$ & (0.397, 0.399) \\[5pt]
+\hline
+$r = 8$ & (0.364, 0.385) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[8pt]
+\hline
+$\sigma^2 = 0.2$ & (0.292, 0.299) & (0.165, 0.176)\\[8pt]
+\hline
+$\sigma^2 = 1$ & (0.664, 0.672) & (0.364, 0.385) \\[8pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, continuous rank probability score (anisotropy, isotropy), sample size = 100}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\hspace*{-1.5cm}
+\begin{tabular}{|c|c|}
+\hline
+$r = 1.5$ & (0.391, 0.355) \\[5pt]
+\hline
+$r = 4$ & (0.325, 0.326) \\[5pt]
+\hline
+$r = 8$ & (0.317, 0.329) \\[5pt]
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{|c|c|c|}
+\hline
+ & $\sigma^2/\tau^2 = 1 $ & $\sigma^2/\tau^2 = 5$\\[8pt]
+\hline
+$\sigma^2 = 0.2$ & (0.268, 0.275) & (0.139, 0.147)\\[8pt]
+\hline
+$\sigma^2 = 1$ & (0.603, 0.617) & (0.317, 0.329)  \\[8pt]
+\hline
+\end{tabular}
+\hspace*{-1.5cm}
+\caption{Model comparison for simulated data, continuous rank probability score (anisotropy, isotropy), sample size = 500}
+\end{table}
+

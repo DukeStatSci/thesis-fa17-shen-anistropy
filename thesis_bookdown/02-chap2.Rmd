@@ -1,0 +1,96 @@
+# Methodology
+
+<!-- Required to number equations in HTML files -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+
+
+
+## Model Fitting
+
+We use the Bayesian framework to perform inference on model parameters and predictions for new locations. Not only do we simultaneously estimate for the ratio of major axis to minor axis of the ellipse, the angle of orientation of the ellipse with respect to the x-axis, the decay parameter, and the additional variogram parameters, but we provide complete inference in the form of a posterior distribution for each parameter. In addition, the Bayesian framework enables incorporation of prior information. If a priori, the process is expected to exhibit geometric anisotropy whose characteristics we can quantify,  this information is easily built into the prior specifications and the model.
+
+We model the data with a Gaussian Process
+\begin{equation}
+\textbf{Y} \sim N_n(\mu \textbf{1},  \Sigma(\theta))
+\end{equation}
+where $\Sigma(\theta)$ is specified by (4) and (5), and $\theta = (\sigma^2, \tau^2, \phi, \alpha, r)^T$. Under the likelihood implied by (7) for a set of say $n$ locations, we complete the Bayesian formulation by assuming the prior takes the form
+
+\begin{equation}
+\pi(\mu, \theta) = \pi(\mu, \sigma^2, \tau^2, \phi, \alpha, r) = \pi(\mu)\pi(\sigma^2)\pi(\tau^2)\pi(\phi)\pi(\alpha)\pi(r),
+\end{equation}
+i.e., assuming all the parameters are independent.
+
+We use a weak $N(0, 1000)$ prior for $\mu$. We use vague inverse gamma distributions for the variances $\sigma^2$ and $\tau^2$ and anisotropy ratio $r$ with shape and scale parameters both equal to one,  implying no prior mean or variance.  We put a uniform$(0, \pi)$ prior on rotation angle $\alpha$ and a uniform$(0.1D, 0.5D)$ on range $1/\phi$, where $D$ is the maximum distance between locations.
+
+We use a Metropolis-Hastings sampling algorithm to obtain samples from the posterior distribution of all parameters $p(\theta|y)$. The Metropolis-Hastings algorithm is a Markov chain Monte Carlo (MCMC) method for obtaining a sequence of random samples from a probability distribution for which direct sampling is difficult. As more and more sample values are produced, the distribution of values more closely approximates the desired posterior distribution $p(\theta|y)$.
+
+Intuitively, assume we have a collection of $\{\theta^{(1)}, . . . , \theta^{(s)}\}$. To generate a new value $\theta^{(s+1)}$, we sample a new value $\theta^*$ that is nearby $\theta^{(s)}$ and consider whether to accept the sampled $\theta^*$ into the collection of $\theta's$. We sample $\theta^*$ from a proposal distribution $J$ centered on $\theta^{(s)}$, and accept $\theta^*$ if $p(\theta^*|y) > p(\theta^{(s)}|y)$. If $p(\theta^*|y) < p(\theta^{(s)}|y)$, we accept $\theta^*$ with some probability. In Metropolis algorithm, the proposal distribution $J$ is symmetric. That is, $J(\theta^*|\theta^{(s)})=J(\theta^{(s)}|\theta^*)$. In Metropolis-Hastings, J may not be symmetric.
+
+The Metropolis-Hastings algorithm proceeds as follows.
+\begin{enumerate}
+\item Sample $\theta^* \sim J(\theta|\theta^{(s)})$
+\item Compute acceptance ratio $r$:
+
+$r = \displaystyle\frac{p(\theta^*|y)}{p(\theta^{(s)}|y)} \times \frac{J(\theta^*|\theta^{(s)})}{J(\theta^{(s)}|\theta^*)} = \displaystyle\frac{p(y|\theta^*)p(\theta^*)}{p(y|\theta^{(s)})p(\theta^{(s)})}\times \frac{J(\theta^*|\theta^{(s)})}{J(\theta^{(s)}|\theta^*)}$
+
+(In the case of Metropolis, $\displaystyle\frac{J(\theta^*|\theta^{(s)})}{J(\theta^{(s)}|\theta^*)}=1$)
+\item Sample $u \sim \text{Uniform}(0, 1)$. Set $\theta^{(s+1)} = \theta^*$ if $u < r$ and set $\theta^{(s+1)} = \theta^s$ otherwise.
+\end{enumerate}
+
+We use appropriate proposal distributions for different parameters. For rotation angle $\alpha$, we generate normal proposals mod $\pi$. For anisotropy ratio $r$, we generate proposals from truncated normal distribution from $0$ to $\infty$ as $r$ can only be positive. We also experimented with using log normal proposal for $r$, but the sampler behaved poorly as it frequently generated extremely big values. For $\sigma^2$, $\tau^2$ and $\phi$ we generate proposals from log normal distribution. Finally, we generate $\mu$ from a normal distribution. Table 1 lists the proposal and prior distributions we use for all the parameters.
+
+Because $\alpha$ and $r$ are highly correlated, we update them jointly. We tune the variances of the proposal distributions so that we accept around $25\%$ of all generated samples to achieve optimal efficiency of the sampler. If proposals vary too much, the sampler will reject too many samples which is inefficient. If proposals vary too little, the chain of samples will not move very much and might get stuck in a local mode.
+
+\begin{table}[H]
+\centering
+\setlength{\extrarowheight}{10pt}
+\begin{tabular}{|c|c|c|}
+\hline
+ & Proposal Distribution & Prior Distribution\\[8pt]
+\hline
+$\alpha$ & Normal (mod $\pi$) & Uniform$(0, \pi$)\\[8pt]
+\hline
+$r$ & Truncated Normal $_{(0, +\infty)}$& Inverse Gamma$(1,1)$\\[8pt]
+\hline
+$\sigma^2$ & Log Normal & Inverse Gamma$(1,1)$\\[8pt]
+\hline
+$\tau^2$ & Log Normal & Inverse Gamma$(1,1)$\\[8pt]
+\hline
+$\phi$ & Log Normal & Uniform $(3/0.5D, 3/0.2D)$\\[8pt]
+\hline
+$\mu$ & Normal & Normal$(0, 1000)$\\[8pt]
+\hline
+\end{tabular}
+\caption{Proposal and prior distributions for Metropolis algorithm}
+\end{table}
+
+## Kriging
+Spatial prediction in the point-referenced data setting is often referred to as \textit{kriging}. Given observations $Y = (Y(s_1), ..., Y(s_n))$, how do we predict $Y(s_0)$, where $s_0$ is a site that has not been observed?
+An observation at location we want to predict $s_0$ follows the following distribution:
+\begin{eqnarray*}
+y(s_o) = \mu + w(s_0) + \epsilon(s)
+\end{eqnarray*}
+
+There are two ways of formulating the posterior predictive distribution. The first way samples spatial random effect w:
+
+\begin{gather*}
+[Y(s_0)|Y] = \int [Y(s_0)|w(s_0),\theta][w(s_0)|w, \theta][w|\theta, Y][Y|\theta]\\
+[w|\theta, Y] = N((\frac{1}{\tau^2}I + \Sigma^{-1})^{-1}\frac{1}{\tau^2}(Y-\mu\textbf{1}), (\frac{1}{\tau^2}I + \Sigma^{-1})^{-1})\\
+[w(s_0)|w] = N(r^{T}\Sigma^{-1}w, \sigma^{2}-r^{T}\Sigma^{-1}r)\\
+[Y(s_0)|w(s_0),\theta] = N(\mu + w(s_0), \tau^2)
+\end{gather*}
+where $r$ is the $n \times 1$ covariance matrix between the new location $s_0$ and all other observed locations, cov$(w(s_0), w(s_i)), i=1, 2, ...n$. $\Sigma$ is the $n \times n$ covariance matrix between the random effects at the observed locations, $(w(s_1),...w(s_n))$.\\\\
+
+The second way marginalizes out spatial random effect w:
+\begin{gather*}
+[Y(s_0)|Y] = \int [Y(s_0)|Y,\theta][\theta|Y]\\
+[Y(s_0)|Y,\theta][\theta|Y] = N(\mu + r^{T}(\Sigma + \tau^2I)^{-1}(Y-\mu\textbf{1}), \sigma^2+\tau^2-r^{T}(\Sigma+\tau^2I)^{-1}r)
+\end{gather*}
+
+We use the second approach in our algorithm as it has been shown to yield better sampling behavior.
+
+

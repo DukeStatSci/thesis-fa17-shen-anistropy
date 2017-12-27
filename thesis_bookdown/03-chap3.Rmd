@@ -1,0 +1,51 @@
+```{r include_packages_2, include = FALSE}
+# This chunk ensures that the thesisdowndss package is
+# installed and loaded. This thesisdowndss package includes
+# the template files for the thesis and also two functions
+# used for labeling and referencing
+if(!require(devtools))
+  install.packages("devtools", repos = "http://cran.rstudio.com")
+if(!require(dplyr))
+    install.packages("dplyr", repos = "http://cran.rstudio.com")
+if(!require(ggplot2))
+    install.packages("ggplot2", repos = "http://cran.rstudio.com")
+if(!require(ggplot2))
+    install.packages("bookdown", repos = "http://cran.rstudio.com")
+if(!require(thesisdowndss)){
+  library(devtools)
+  devtools::install_github("mine-cetinkaya-rundel/thesisdowndss")
+  }
+library(thesisdowndss)
+flights <- read.csv("data/flights.csv")
+```
+
+
+# Model Comparison
+
+We use the following three metrics for model comparison.
+
+## Predictive Mean Squared Error
+
+The predictive mean squared error measures the mean squared difference between the predicted value and the observed value averaged over all hold out locations.
+\begin{eqnarray*}
+PMSE=\frac{1}{n}\sum(\hat{Y} - Y_{obs})^2
+\end{eqnarray*}
+
+In the Bayesian context, $\hat{Y}$ for each location is the posterior predictive mean.  We then average the squared difference between $\hat{Y}$ and the observed value over all hold out locations. 
+
+
+## Empirical Coverage
+Empirical coverage assesses how well credible intervals, derived from the posterior predictive distributions of the predictions, capture the observed values of the hold out sample. Suppose we obtain 90\% credible intervals from the posterior predictive distributions for each of the hold out locations. If the credible intervals capture the observed value for $<$90\% hold out locations, we have \textit{under coverage}. If the credible intervals capture the observed value for $>$90\% hold out locations, we have \textit{over coverage}.  Since the empirical coverage is random, we will criticize the adequacy of the model when the departure from the nominal coverage is consequential.
+
+## Continuous Rank Probability Score (CRPS)
+To examine how concentrated the predictive distribution of $Y(s_0)$ is around the observed value, we use the Continuous Rank Probability Score (CRPS) metric, the squared integrated distance between the predictive distribution and the degenerate distribution at the observed value,
+\begin{equation*}
+CRPS(F,y) = \int_{-\infty}^{\infty}(F(u)-I(u\ge y))^2du
+\end{equation*}
+where F is the predictive distribution and y is the observed value. In our case, $Y(s_0)$ is the observation and F is the posterior predictive distribution for $Y(s_0)$. With a collection of hold out observations and associated predictive distributions, we would average the CRPS over these observations for model comparison. In our case, under MCMC model fitting, we would not have $F$ directly, but rather a sample from $F$. We use the alternative form of CRPS: 
+
+\begin{equation*}
+CRPS(F,y) = \displaystyle{\frac{1}{2}}E_F|Y-Y'| + E_F|Y-y|
+\end{equation*}
+where $Y$ and $Y'$ are independent replicates from $F$. With samples from $F$, we can use Monte Carlo integration to compute CRPS.
+
